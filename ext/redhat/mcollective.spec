@@ -10,8 +10,6 @@ License: ASL 2.0
 URL: http://puppetlabs.com/mcollective/introduction/
 Source0: http://downloads.puppetlabs.com/mcollective/%{name}-%{version}.tgz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: ruby
-BuildRequires: ruby(abi) >= 1.8
 Requires: mcollective-common = %{version}-%{release}
 Packager: R.I.Pienaar <rip@devco.net>
 BuildArch: noarch
