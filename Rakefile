@@ -129,20 +129,22 @@ task :rpm => [:clean, :doc, :package] do
   specsdir = `rpm --eval '%_specdir'`.chomp
   srpmsdir = `rpm --eval '%_srcrpmdir'`.chomp
   rpmdir = `rpm --eval '%_rpmdir'`.chomp
-  lsbdistrel = `lsb_release -r -s | cut -d . -f1`.chomp
-  lsbdistro = `lsb_release -i -s`.chomp
+  rpmdist = ''
+
+  `which lsb_release`
+  if $?.success?
+    lsbdistrel = `lsb_release -r -s | cut -d . -f1`.chomp
+    lsbdistro = `lsb_release -i -s`.chomp
+    case lsbdistro
+    when 'CentOS'
+      rpmdist = ".el#{lsbdistrel}"
+    when 'Fedora'
+      rpmdist = ".fc#{lsbdistrel}"
+    end
+  end
 
   `which rpmbuild-md5`
   rpmcmd = $?.success? ? 'rpmbuild-md5' : 'rpmbuild'
-
-  case lsbdistro
-  when 'CentOS'
-    rpmdist = ".el#{lsbdistrel}"
-  when 'Fedora'
-    rpmdist = ".fc#{lsbdistrel}"
-  else
-    rpmdist = ""
-  end
 
   safe_system %{cp build/#{PROJ_NAME}-#{CURRENT_VERSION}.tgz #{sourcedir}}
   safe_system %{cat ext/redhat/#{PROJ_NAME}.spec|sed -e s/%{rpm_release}/#{CURRENT_RELEASE}/g | sed -e s/%{version}/#{CURRENT_VERSION}/g > #{specsdir}/#{PROJ_NAME}.spec}
@@ -153,9 +155,9 @@ task :rpm => [:clean, :doc, :package] do
     safe_system %{#{rpmcmd} -D 'version #{CURRENT_VERSION}' -D 'rpm_release #{CURRENT_RELEASE}' -D 'dist #{rpmdist}' -D 'use_lsb 0' -ba #{specsdir}/#{PROJ_NAME}.spec}
   end
 
-  safe_system %{cp #{srpmsdir}/#{PROJ_NAME}-#{CURRENT_VERSION}-#{CURRENT_RELEASE}#{rpmdist}.src.rpm build/}
+  safe_system %{cp #{srpmsdir}/#{PROJ_NAME}-#{CURRENT_VERSION}-#{CURRENT_RELEASE}*.src.rpm build/}
 
-  safe_system %{cp #{rpmdir}/*/#{PROJ_NAME}*-#{CURRENT_VERSION}-#{CURRENT_RELEASE}#{rpmdist}.*.rpm build/}
+  safe_system %{cp #{rpmdir}/*/#{PROJ_NAME}*-#{CURRENT_VERSION}-#{CURRENT_RELEASE}*.rpm build/}
 end
 
 desc "Create the .debs"
